@@ -163,8 +163,10 @@ function makeQuoteTool() {
   return createCapabilityTools([capability])[0];
 }
 
-describe('quote provenance acceptance slice (#101)', () => {
-  it('keeps the actual fallback source through the agent tool and evidence reload', async () => {
+// Controlled fixture path: this deterministic test verifies the wiring and
+// persistence contract without claiming a live model or external provider.
+describe('quote provenance acceptance slice (#101, controlled fixture)', () => {
+  it('keeps the actual fallback source through the fixture tool path and evidence reload', async () => {
     const tool = makeQuoteTool();
     const toolResult = await tool.execute('quote-1', { symbol: 'aapl.us' }, new AbortController().signal);
 

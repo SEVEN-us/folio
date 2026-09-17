@@ -1,4 +1,9 @@
 import { Type } from '@sinclair/typebox';
+import {
+  DEFAULT_INSTRUMENT_CATALOG,
+  InstrumentResolver,
+  readInstrumentId,
+} from '@finagent/core';
 import type {
   FinanceCapability,
   Quote,
@@ -7,6 +12,8 @@ import { defineCapability } from '../define.ts';
 import { normalizeSymbol } from '../validate.ts';
 import type { CapabilityFetchers } from '../fetchers.ts';
 import { defaultCapabilityFetchers } from '../fetchers.ts';
+
+const DEFAULT_INSTRUMENT_RESOLVER = new InstrumentResolver(DEFAULT_INSTRUMENT_CATALOG);
 
 export function createMarketQuoteCapability(
   fetchers: CapabilityFetchers = defaultCapabilityFetchers
@@ -33,10 +40,13 @@ export function createMarketQuoteCapability(
         : undefined;
       const quote = fetched?.data ?? await fetchers.getQuote(symbol);
       if (fetched) reportProvider?.(fetched.provenance);
+      const instrumentId = readInstrumentId(quote) ?? resolveCanonicalInstrumentId(symbol);
       return {
         data: quote,
         provenance: {
           provider: 'longbridge',
+          providerName: 'Longbridge',
+          ...(instrumentId ? { instrumentId } : {}),
           fetchedAt: (ctx?.now ?? Date.now)(),
           marketTime: quote.timestamp * 1000,
           stale: false,
@@ -45,6 +55,11 @@ export function createMarketQuoteCapability(
       };
     },
   });
+}
+
+function resolveCanonicalInstrumentId(symbol: string): string | undefined {
+  const resolution = DEFAULT_INSTRUMENT_RESOLVER.resolve(symbol, { providerId: 'longbridge' });
+  return resolution.status === 'resolved' ? resolution.instrument.instrumentId : undefined;
 }
 
 function formatQuote(quote: Quote) {
