@@ -95,6 +95,7 @@ const kernel = new AgentKernel({
     cwd: repoRoot,
     env: runtimeEnv,
     requestTimeoutMs: 240_000,
+    healthTimeoutMs: 120_000,
     singleToolTimeoutMs: 60_000,
   },
 });
